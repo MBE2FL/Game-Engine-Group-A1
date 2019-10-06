@@ -6,6 +6,18 @@ using System.Runtime.InteropServices;
 using UnityEditor;
 #endif
 
+public enum CommandTypes
+{
+    SpawnCube,
+    SpawnSphere,
+    SpawnPlayer,
+    SpawnPlane,
+    SpawnEnemy,
+    SpawnWall,
+    SpawnEnemySpawner,
+    Delete
+}
+
 public enum ObjectTypes
 {
     Cube,
@@ -20,7 +32,11 @@ public enum ObjectTypes
 
 public class CommandHub : MonoBehaviour
 {
-    
+    private const int MAX_COMMANDS = 32;
+    private Stack<ICommand> _commands = new Stack<ICommand>(MAX_COMMANDS);
+    private Stack<ICommand> _undoneCommands = new Stack<ICommand>(MAX_COMMANDS);
+    private ICommand _currentCommand = null;
+    private Factory _factory = null;
     private const string DLL_NAME = "EditorPlugin";
     [SerializeField]
     private string _saveFilePath = "";
@@ -60,39 +76,89 @@ public class CommandHub : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-       
+        _factory = Factory.Instance;
     }
 
-    private void Update()
+    public void Execute(string command)
     {
-        if (Input.GetKeyDown(KeyCode.S))
+        // Request a command from the factory
+        switch (command)
         {
-            SaveLevel();
+            case "SpawnCube":
+                    _currentCommand = _factory.CreateCommand(CommandTypes.SpawnCube);
+                    break;
+            case "SpawnSphere":
+                    _currentCommand = _factory.CreateCommand(CommandTypes.SpawnSphere);
+                    break;
+            case "SpawnPlayer":
+                _currentCommand = _factory.CreateCommand(CommandTypes.SpawnPlayer);
+                break;
+            case "SpawnPlane":
+                _currentCommand = _factory.CreateCommand(CommandTypes.SpawnPlane);
+                break;
+            case "Delete":
+                _currentCommand = _factory.CreateCommand(CommandTypes.Delete);
+                break;
+            case "SpawnWall":
+                _currentCommand = _factory.CreateCommand(CommandTypes.SpawnWall);
+                break;
+            case "SpawnEnemySpawner":
+                _currentCommand = _factory.CreateCommand(CommandTypes.SpawnEnemySpawner);
+                break;
+            default:
+                return;
         }
-        if (Input.GetKeyDown(KeyCode.L))
-        {
-            LoadLevel();
-        }
+
+        // Execute the current command
+        _currentCommand.Execute();
+        _commands.Push(_currentCommand);
     }
 
+    public void Execute(ICommand command)
+    {
+        _currentCommand.Execute();
+        _commands.Push(_currentCommand);
+    }
 
+    public void Undo()
+    {
+        if (_commands.Count > 0)
+        {
+            // Perform last commands undo
+            _currentCommand.Undo();
+            _commands.Pop();
+            _undoneCommands.Push(_currentCommand);
+
+            // Set current command to the next command in the stack
+            if (_commands.Count > 0)
+                _currentCommand = _commands.Peek();
+            else
+                _currentCommand = null;
+        }
+        else
+            Debug.Log("No more commands to undo.");
+    }
+
+    public void Redo()
+    {
+        // Redo the last undone command
+        if (_undoneCommands.Count > 0)
+        {
+            _currentCommand = _undoneCommands.Pop();
+            _currentCommand.Execute();
+            _commands.Push(_currentCommand);
+        }
+        else
+            Debug.Log("No more commands to redo.");
+    }
 
     public void SaveLevel()
     {
-
-        GameObject obj = new GameObject();
-        obj.transform.position = new Vector3(2,1,0);
-        obj.AddComponent<ObjectType>().Type = ObjectTypes.Cube;
-        GameObject obj2 = new GameObject();
-        obj2.transform.position = new Vector3(3, 4, 1);
-        obj2.AddComponent<ObjectType>().Type = ObjectTypes.Sphere;
-
-        List<GameObject> objs = new List<GameObject> ();
-        objs.Add(obj);
-        objs.Add(obj2);
+        List<GameObject> objs = _factory.Objs;
 
         int stride = 4;
         float[] data = new float[objs.Count * stride];
+        GameObject obj;
         ObjectTypes type;
         Vector3 pos;
         int offset = 0;
@@ -139,8 +205,7 @@ public class CommandHub : MonoBehaviour
             
             type = (ObjectTypes)data[3 + offset];
 
-            obj = new GameObject();
-            obj.AddComponent<ObjectType>().Type = type;
+            _factory.CreateGameObject(type, out obj);
 
             pos = new Vector3(data[0 + offset], data[1 + offset], data[2 + offset]);
             obj.transform.position = pos;
