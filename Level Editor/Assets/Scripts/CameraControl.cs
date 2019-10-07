@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.UI;
+using UnityEngine.AI;
 
 public class CameraControl : MonoBehaviour
 {
@@ -13,6 +15,10 @@ public class CameraControl : MonoBehaviour
     [SerializeField]
     private Vector3 _camOffset = new Vector3(0.0f, 2.5f, -2.5f);
     private GameObject _player;
+    private GameObject _canvas;
+
+    private NavMeshSurface _navMeshSurface;
+
 
     public GameObject SelectedObj
     {
@@ -57,6 +63,12 @@ public class CameraControl : MonoBehaviour
         _objectSelectedState = gameObject.AddComponent<CameraObjectSelectedState>();
         _playerState = gameObject.AddComponent<CameraPlayerState>();
         _state = _moveState;
+    }
+
+    private void Start()
+    {
+        _canvas = GameObject.Find("Canvas");
+        _navMeshSurface = GameObject.Find("Ground").GetComponent<NavMeshSurface>();
     }
 
 
@@ -140,12 +152,22 @@ public class CameraControl : MonoBehaviour
     {
         //Cursor.lockState = CursorLockMode.Locked;
         Cursor.lockState = CursorLockMode.Confined;
-        //Cursor.visible = false;
+        Cursor.visible = false;
 
         Factory.Instance.CreateGameObject(ObjectTypes.Player, out _player);
 
         _state = _playerState;
         _state.entry(this);
+
+        foreach (Transform child in _canvas.transform)
+        {
+            if (child.name != "Stop Button")
+                child.GetComponent<Button>().interactable = false;
+        }
+
+        EnemySpawner.spawnersActive(true);
+
+        _navMeshSurface.BuildNavMesh();
     }
 
     public void stop()
@@ -153,11 +175,24 @@ public class CameraControl : MonoBehaviour
         if (_player)
         {
             Cursor.lockState = CursorLockMode.None;
-            //Cursor.visible = true;
+            Cursor.visible = true;
             _state = _moveState;
             _state.entry(this);
 
             Factory.Instance.DeleteGameObject(ref _player);
+
+            foreach (Transform child in _canvas.transform)
+            {
+                child.GetComponent<Button>().interactable = true;
+            }
+
+            EnemySpawner.spawnersActive(false);
+
+            GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");
+            foreach (GameObject enemy in enemies)
+            {
+                Destroy(enemy);
+            }
         }
     }
 }

@@ -7,9 +7,6 @@ public class Movement : MonoBehaviour
     [SerializeField]
     private float _movementSpeed = 1.0f;
     private Rigidbody _rb;
-    //[SerializeField]
-    //private Vector3 _camOffset;
-    //private Camera _cam = null;
 
     private void Awake()
     {
@@ -19,14 +16,10 @@ public class Movement : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        //_cam = Camera.main;
-        //Quaternion rot = new Quaternion();
-        //rot.eulerAngles = new Vector3(50.0f, 0.0f, 0.0f);
-        //_cam.transform.rotation = rot;
     }
 
     // Update is called once per frame
-    void Update()
+    void FixedUpdate()
     {
         // Move with WASD
         //if (Input.GetKey(KeyCode.W))
@@ -46,8 +39,5 @@ public class Movement : MonoBehaviour
             _rb.AddForce(-transform.right * _movementSpeed);
         else if (Input.GetKey(KeyCode.D))
             _rb.AddForce(transform.right * _movementSpeed);
-
-        // Camera follow player
-        //_cam.transform.position = transform.position + _camOffset;
     }
 }

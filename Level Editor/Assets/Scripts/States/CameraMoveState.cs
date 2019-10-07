@@ -38,18 +38,18 @@ public class CameraMoveState : MonoBehaviour, ICameraState
         // Right click moves the camera left/right, up/down.
         if (Input.GetMouseButton(1))
         {
-            transform.position += transform.right * horizontal;
-            transform.position += transform.up * vertical;
+            transform.position += transform.right * horizontal * 3.0f;
+            transform.position += transform.up * vertical * 3.0f;
         }
 
         // Moving the scroll wheel moves the camera along the world z-axis.
-        transform.position += transform.forward * Input.GetAxis("Mouse ScrollWheel") * 3.0f;
+        transform.position += transform.forward * Input.GetAxis("Mouse ScrollWheel") * 15.0f;
 
         // Middle mouse button rotates the camera.
         if (Input.GetMouseButton(2))
         {
-            transform.Rotate(new Vector3(2.0f * vertical, 0.0f, 0.0f));
-            transform.Rotate(new Vector3(0.0f, 2.0f * horizontal, 0.0f));
+            transform.Rotate(new Vector3(4.0f * vertical, 0.0f, 0.0f));
+            transform.Rotate(new Vector3(0.0f, 4.0f * horizontal, 0.0f));
         }
     }
 }

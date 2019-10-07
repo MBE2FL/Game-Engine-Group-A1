@@ -4,17 +4,29 @@ using UnityEngine;
 
 public class Health : MonoBehaviour
 {
-    private int _health = 100;
+    [SerializeField]
+    private int _hp = 100;
 
-    public int GetHealth
+    public int HP
     {
         get
         {
-            return _health;
+            return _hp;
         }
         set
         {
-            _health = value;
+            _hp = value;
+        }
+    }
+
+    private void Update()
+    {
+        if (_hp <= 0)
+        {
+            Destroy(gameObject);
+
+            ++EnemySpawner.Kills;
+            Debug.Log("Kills: " + EnemySpawner.Kills);
         }
     }
 }

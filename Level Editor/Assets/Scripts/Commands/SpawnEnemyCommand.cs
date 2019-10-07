@@ -8,7 +8,7 @@ public class SpawnEnemyCommand : ICommand
 
     public void Execute()
     {
-        Factory.Instance.CreateGameObject(ObjectTypes.Enemy, out obj);
+        Factory.Instance.CreateGameObject(ObjectTypes.Bunny, out obj);
     }
 
     public void Undo()

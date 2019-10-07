@@ -11,8 +11,6 @@ public enum CommandTypes
     SpawnCube,
     SpawnSphere,
     SpawnPlayer,
-    SpawnPlane,
-    SpawnEnemy,
     SpawnWall,
     SpawnEnemySpawner,
     Delete
@@ -23,9 +21,8 @@ public enum ObjectTypes
     Cube,
     Sphere,
     Player,
-    Plane,
     Wall,
-    Enemy,
+    Bunny,
     Zombie,
     EnemySpawner
 }
@@ -85,16 +82,13 @@ public class CommandHub : MonoBehaviour
         switch (command)
         {
             case "SpawnCube":
-                    _currentCommand = _factory.CreateCommand(CommandTypes.SpawnCube);
-                    break;
+                _currentCommand = _factory.CreateCommand(CommandTypes.SpawnCube);
+                break;
             case "SpawnSphere":
-                    _currentCommand = _factory.CreateCommand(CommandTypes.SpawnSphere);
-                    break;
+                _currentCommand = _factory.CreateCommand(CommandTypes.SpawnSphere);
+                break;
             case "SpawnPlayer":
                 _currentCommand = _factory.CreateCommand(CommandTypes.SpawnPlayer);
-                break;
-            case "SpawnPlane":
-                _currentCommand = _factory.CreateCommand(CommandTypes.SpawnPlane);
                 break;
             case "Delete":
                 _currentCommand = _factory.CreateCommand(CommandTypes.Delete);
@@ -162,13 +156,19 @@ public class CommandHub : MonoBehaviour
         ObjectTypes type;
         Vector3 pos;
         int offset = 0;
+        List<EnemySpawner> spawners = new List<EnemySpawner>();
 
+        // Save game object positions and types.
         for (int i = 0; i < objs.Count; ++i)
         {
             obj = objs[i];
 
             pos = obj.transform.position;
             type = obj.GetComponent<ObjectType>().Type;
+
+            // Store spawners to extract info from later.
+            if (type == ObjectTypes.EnemySpawner)
+                spawners.Add(obj.GetComponent<EnemySpawner>());
 
             data[offset] = pos.x;
             data[1 + offset] = pos.y;
@@ -181,6 +181,21 @@ public class CommandHub : MonoBehaviour
         save(_saveFilePath + _saveFileName, data, objs.Count, stride);
 
         Debug.Log("File \"" + _saveFileName + "\" saved.");
+
+        // Save spawners' info.
+        data = new float[spawners.Count * stride];
+        offset = 0;
+        foreach (EnemySpawner spawner in spawners)
+        {
+            data[offset] = spawner.MaxEnemies;
+            data[offset + 1] = spawner.SpawnRate;
+            data[offset + 2] = spawner.SpawnTime;
+            data[offset + 3] = (float)spawner.EnemyType;
+
+            offset += stride;
+        }
+
+        save(_saveFilePath + _saveFileName + "SpawnerInfo", data, spawners.Count, stride);
     }
 
     public void LoadLevel()
@@ -197,7 +212,9 @@ public class CommandHub : MonoBehaviour
         Vector3 pos;
         ObjectTypes type;
         int offset = 0;
+        List<EnemySpawner> spawners = new List<EnemySpawner>();
         
+        // Load object positions and types.
         Marshal.Copy(getData(), data, 0, numObjs * stride);
 
         for (int i = 0; i < numObjs; ++i)
@@ -211,8 +228,35 @@ public class CommandHub : MonoBehaviour
             obj.transform.position = pos;
 
             offset += stride;
+
+            // Store spawners to update info their info later.
+            if (type == ObjectTypes.EnemySpawner)
+                spawners.Add(obj.GetComponent<EnemySpawner>());
         }
 
+
+        // Load spawners' info.
+        EnemySpawner spawner;
+        load(_saveFilePath + _saveFileName + "SpawnerInfo", stride);
+        data = new float[spawners.Count * stride];
+        offset = 0;
+        Marshal.Copy(getData(), data, 0, spawners.Count * stride);
+
+        for (int i = 0; i < spawners.Count; ++i)
+        {
+            spawner = spawners[i];
+
+            spawner.MaxEnemies = (int)data[offset];
+            spawner.SpawnRate = (int)data[offset + 1];
+            spawner.SpawnTime = data[offset + 2];
+            spawner.EnemyType = (EnemyTypes)data[offset + 3];
+
+            //_factory.CreateGameObject(enemyType, out obj);
+
+            //spawner.Enemy = obj.GetComponent<Enemy>();
+
+            offset += stride;
+        }
     }
 }
 

@@ -12,7 +12,7 @@ public class Factory : MonoBehaviour
     private Object _sphere;
     private Object _player;
     private Object _plane;
-    private Object _enemy;
+    private Object _bunny;
     private Object _wall;
     private Object _enemySpawner;
     private Object _zombie;
@@ -51,7 +51,7 @@ public class Factory : MonoBehaviour
         _sphere = Resources.Load("Prefabs/Sphere");
         _player = Resources.Load("Prefabs/Player");
         _plane = Resources.Load("Prefabs/Plane");
-        _enemy = Resources.Load("Prefabs/Enemy");
+        _bunny = Resources.Load("Prefabs/Bunny");
         _wall = Resources.Load("Prefabs/Wall");
         _enemySpawner = Resources.Load("Prefabs/EnemySpawner");
         _zombie = Resources.Load("Prefabs/Zombie");
@@ -81,30 +81,30 @@ public class Factory : MonoBehaviour
             case ObjectTypes.Cube:
                 obj = Instantiate(_cube, Vector3.zero, Quaternion.identity, null) as GameObject;
                 obj.GetComponent<ObjectType>().Type = ObjectTypes.Cube;
+                _objs.Add(obj);
                 break;
             case ObjectTypes.Sphere:
                 obj = Instantiate(_sphere, Vector3.zero, Quaternion.identity, null) as GameObject;
                 obj.GetComponent<ObjectType>().Type = ObjectTypes.Sphere;
+                _objs.Add(obj);
                 break;
             case ObjectTypes.Player:
                 obj = Instantiate(_player, Vector3.zero, Quaternion.identity, null) as GameObject;
                 obj.GetComponent<ObjectType>().Type = ObjectTypes.Player;
                 break;
-            case ObjectTypes.Plane:
-                obj = Instantiate(_plane, Vector3.zero, Quaternion.identity, null) as GameObject;
-                obj.GetComponent<ObjectType>().Type = ObjectTypes.Plane;
-                break;
-            case ObjectTypes.Enemy:
-                obj = Instantiate(_enemy, Vector3.zero, Quaternion.identity, null) as GameObject;
-                obj.GetComponent<ObjectType>().Type = ObjectTypes.Enemy;
+            case ObjectTypes.Bunny:
+                obj = Instantiate(_bunny, Vector3.zero, Quaternion.identity, null) as GameObject;
+                obj.GetComponent<ObjectType>().Type = ObjectTypes.Bunny;
                 break;
             case ObjectTypes.Wall:
                 obj = Instantiate(_wall, Vector3.zero, Quaternion.identity, null) as GameObject;
                 obj.GetComponent<ObjectType>().Type = ObjectTypes.Wall;
+                _objs.Add(obj);
                 break;
             case ObjectTypes.EnemySpawner:
                 obj = Instantiate(_enemySpawner, Vector3.zero, Quaternion.identity, null) as GameObject;
                 obj.GetComponent<ObjectType>().Type = ObjectTypes.EnemySpawner;
+                _objs.Add(obj);
                 break;
             case ObjectTypes.Zombie:
                 obj = Instantiate(_zombie, Vector3.zero, Quaternion.identity, null) as GameObject;
@@ -115,17 +115,21 @@ public class Factory : MonoBehaviour
                 break;
         }
 
-        _objs.Add(obj);
+        //_objs.Add(obj);
     }
 
     public void DeleteGameObject(ref GameObject obj)
     {
-        if (_objs.Count > 1)
+        if (_objs.Contains(obj))
         {
-            GameObject temp = _objs[_objs.Count - 1];
-            _objs[_objs.IndexOf(obj)] = temp;
+            if (_objs.Count > 1)
+            {
+                GameObject temp = _objs[_objs.Count - 1];
+                _objs[_objs.IndexOf(obj)] = temp;
+            }
+            _objs.RemoveAt(_objs.Count - 1);
+
         }
-        _objs.RemoveAt(_objs.Count - 1);
 
         Destroy(obj);
     }
@@ -144,12 +148,6 @@ public class Factory : MonoBehaviour
                 break;
             case CommandTypes.SpawnPlayer:
                 command = new SpawnPlayerCommand();
-                break;
-            case CommandTypes.SpawnPlane:
-                command = new SpawnPlaneCommand();
-                break;
-            case CommandTypes.SpawnEnemy:
-                command = new SpawnEnemyCommand();
                 break;
             case CommandTypes.Delete:
                 command = new DeleteCommand();

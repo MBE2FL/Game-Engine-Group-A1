@@ -13,13 +13,21 @@ public class EnemyMovement : MonoBehaviour
     void Start()
     {
         _player = GameObject.FindGameObjectWithTag("Player");
-        _playerTrans = _player.transform;
+        if (_player)
+            _playerTrans = _player.transform;
         _navAgent = GetComponent<NavMeshAgent>();
     }
 
     // Update is called once per frame
     void Update()
     {
-        _navAgent.SetDestination(_playerTrans.position);
+        if (_player)
+            _navAgent.SetDestination(_playerTrans.position);
+        else
+        {
+            _player = GameObject.FindGameObjectWithTag("Player");
+            if (_player)
+                _playerTrans = _player.transform;
+        }
     }
 }

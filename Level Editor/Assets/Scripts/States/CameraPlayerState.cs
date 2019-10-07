@@ -33,10 +33,10 @@ public class CameraPlayerState : MonoBehaviour, ICameraState
     {
         // Camera follow player
         float horizontal = Input.GetAxis("Mouse X");
-        float vertical = Input.GetAxis("Mouse Y");
+        //float vertical = Input.GetAxis("Mouse Y");
 
 
-        _playerTrans.transform.Rotate(new Vector3(0.0f, horizontal, 0.0f));
+        _playerTrans.transform.Rotate(new Vector3(0.0f, horizontal * 2.0f, 0.0f));
 
 
         //_cam.transform.RotateAround(_playerTrans.position, Vector3.up, horizontal);
@@ -45,5 +45,12 @@ public class CameraPlayerState : MonoBehaviour, ICameraState
 
         _cam.transform.position = _playerTrans.position + Quaternion.Euler(0.0f, _angle, 0.0f) * camControl.CamOffset;
         _cam.transform.LookAt(_playerTrans);
+
+
+        if (EnemySpawner.AllEnemiesDead)
+        {
+            camControl.stop();
+            Debug.Log("Game Over");
+        }
     }
 }
